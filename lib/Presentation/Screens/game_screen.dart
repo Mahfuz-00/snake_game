@@ -9,7 +9,7 @@ import 'package:snake_game/Presentation/Widgets/game_board.dart';
 import 'package:snake_game/Presentation/Widgets/reward_widget.dart';
 import 'package:snake_game/Presentation/Widgets/score_widget.dart';
 import 'package:snake_game/Presentation/Widgets/spin_counter_widget.dart';
-import 'package:snake_game/Presentation/Widgets/game_over_dialog.dart';
+import 'package:snake_game/Presentation/Screens/game_over_screen.dart';
 
 class GameScreen extends StatelessWidget {
   final GameMode gameMode;
@@ -21,7 +21,7 @@ class GameScreen extends StatelessWidget {
     final size = MediaQuery.of(context).size;
     const cellSize = 20.0;
     final gridWidth = (size.width / cellSize).floor();
-    final gridHeight = (size.height / cellSize).floor() - 5; // Adjust for UI elements
+    final gridHeight = (size.height / cellSize).floor() - 5;
 
     return BlocProvider(
       create: (context) => GameBloc(
@@ -29,36 +29,38 @@ class GameScreen extends StatelessWidget {
         HighScoreRepository(),
       )..add(StartGame(gameMode, gridWidth, gridHeight)),
       child: Scaffold(
-        body: BlocListener<GameBloc, GameState>(
-          listener: (context, state) {
+        body: BlocConsumer<GameBloc, GameState>(
+          listener: (context, state) async {
             if (!state.isPlaying) {
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (context) => GameOverDialog(score: state.score),
+              print('Game over detected in GameScreen, navigating to GameOverScreen with score: ${state.score}');
+              await Future.delayed(const Duration(milliseconds: 100));
+              Navigator.of(context, rootNavigator: true).pushReplacement(
+                MaterialPageRoute(builder: (context) => GameOverScreen(score: state.score)),
               );
             }
           },
-          child: Column(
-            children: [
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      ScoreWidget(),
-                      SpinCounterWidget(),
-                    ],
+          builder: (context, state) {
+            return Column(
+              children: [
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        ScoreWidget(),
+                        SpinCounterWidget(),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              RewardWidget(),
-              Expanded(
-                child: GameBoard(cellSize: cellSize),
-              ),
-            ],
-          ),
+                RewardWidget(),
+                Expanded(
+                  child: GameBoard(cellSize: cellSize),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

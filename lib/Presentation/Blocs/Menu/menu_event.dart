@@ -1,10 +1,11 @@
 part of 'menu_bloc.dart';
 
-abstract class MenuEvent extends Equatable {
+abstract class MenuEvent {
   const MenuEvent();
 }
 
-class LoadHighScores extends MenuEvent {
-  @override
-  List<Object> get props => [];
+class SelectGameMode extends MenuEvent {
+  final GameMode mode;
+
+  const SelectGameMode(this.mode);
 }

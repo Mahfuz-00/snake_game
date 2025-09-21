@@ -18,7 +18,6 @@ class GameBoard extends StatelessWidget {
           onPanUpdate: (details) {
             final dx = details.delta.dx;
             final dy = details.delta.dy;
-            // Threshold to avoid overly sensitive swipes
             if (dx.abs() > dy.abs() && dx.abs() > 5) {
               if (dx > 0) {
                 context.read<GameBloc>().add(const ChangeDirection(Direction.right));
@@ -35,7 +34,6 @@ class GameBoard extends StatelessWidget {
           },
           onTap: () {
             context.read<GameBloc>().add(PerformSpin());
-            // Debug print to verify tap detection
             print('Tap detected for spin');
           },
           child: Container(
@@ -43,7 +41,8 @@ class GameBoard extends StatelessWidget {
             child: Stack(
               children: [
                 SnakeWidget(cellSize: cellSize, snake: state.snake),
-                FoodWidget(cellSize: cellSize, food: state.food),
+                if (state.food != null) FoodWidget(cellSize: cellSize, food: state.food!),
+                if (state.specialFood != null) FoodWidget(cellSize: cellSize, food: state.specialFood!),
               ],
             ),
           ),

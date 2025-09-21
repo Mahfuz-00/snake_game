@@ -1,11 +1,18 @@
 import 'package:equatable/equatable.dart';
 
 class Position extends Equatable {
-  final int x;
-  final int y;
+  final double x;
+  final double y;
 
-  const Position(this.x, this.y);
+  const Position({required this.x, required this.y});
 
   @override
   List<Object> get props => [x, y];
+
+  Position copyWith({double? x, double? y}) {
+    return Position(
+      x: x ?? this.x,
+      y: y ?? this.y,
+    );
+  }
 }

@@ -13,12 +13,12 @@ class SnakeGameApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Snake Game',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: BlocProvider(
-        create: (context) => MenuBloc(highScoreRepository: HighScoreRepository()),
-        child: const MenuScreen(),
+    return BlocProvider(
+      create: (context) => MenuBloc(highScoreRepository: HighScoreRepository()),
+      child: MaterialApp(
+        title: 'Snake Game',
+        theme: ThemeData(primarySwatch: Colors.blue),
+        home: const MenuScreen(),
       ),
     );
   }

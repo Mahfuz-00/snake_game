@@ -4,6 +4,8 @@ import 'package:snake_game/Core/enums.dart';
 import 'package:snake_game/Presentation/Blocs/Game/game_bloc.dart';
 
 class RewardWidget extends StatelessWidget {
+  const RewardWidget({super.key});
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<GameBloc, GameState>(

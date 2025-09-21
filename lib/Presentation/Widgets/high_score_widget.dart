@@ -8,14 +8,31 @@ class HighScoreWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const Text('High Scores', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-        ...highScores.asMap().entries.map((entry) => Text(
-          '${entry.key + 1}. ${entry.value.score} - ${entry.value.date.toString().split('.')[0]}',
-          style: const TextStyle(fontSize: 16),
-        )),
-      ],
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          const Text(
+            'High Scores',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          if (highScores.isEmpty)
+            const Text('No high scores yet.')
+          else
+            ListView.builder(
+              shrinkWrap: true,
+              itemCount: highScores.length,
+              itemBuilder: (context, index) {
+                final score = highScores[index];
+                return ListTile(
+                  title: Text('Score: ${score.score}'),
+                  subtitle: Text('Date: ${score.date.toString().substring(0, 10)}'),
+                );
+              },
+            ),
+        ],
+      ),
     );
   }
 }
