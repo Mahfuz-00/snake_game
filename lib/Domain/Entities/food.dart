@@ -9,7 +9,7 @@ class Food extends Equatable {
   const Food({
     required this.position,
     this.isSpecial = false,
-    this.points = 10, // Regular food: 10 points
+    this.points = 1, // Regular food: 1 points
   });
 
   @override

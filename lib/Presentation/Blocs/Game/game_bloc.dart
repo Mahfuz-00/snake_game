@@ -1,15 +1,14 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:snake_game/Core/enums.dart';
-import 'package:snake_game/Data/Repositories/high_score_repository.dart';
-import 'package:snake_game/Domain/Entities/food.dart';
-import 'package:snake_game/Domain/Entities/position.dart';
-import 'package:snake_game/Domain/Entities/snake.dart';
-import 'package:snake_game/Domain/Usecases/game_use_case.dart';
-
 import '../../../Data/Models/high_score.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../Core/enums.dart';
+import '../../../Data/Repositories/high_score_repository.dart';
+import '../../../Domain/Entities/food.dart';
+import '../../../Domain/Entities/position.dart';
+import '../../../Domain/Entities/snake.dart';
+import '../../../Domain/Usecases/game_use_case.dart';
 
 part 'game_event.dart';
 part 'game_state.dart';
@@ -59,13 +58,15 @@ class GameBloc extends Bloc<GameEvent, GameState> {
   }
 
   void _onChangeDirection(ChangeDirection event, Emitter<GameState> emit) {
+    print('Changing direction to: ${event.direction}');
     if (!_isOppositeDirection(event.direction, state.snake.direction)) {
       emit(state.copyWith(snake: state.snake.copyWith(direction: event.direction)));
     }
   }
 
   void _onPerformSpin(PerformSpin event, Emitter<GameState> emit) {
-    if (state.snake.spinPositions.length >= 3) {
+    print('Performing spin, current segments: ${state.snake.segments.length}');
+    if (state.snake.spinPositions.length >= 3 || state.snake.segments.length <= 1) {
       _gameOver(emit);
       return;
     }
@@ -76,13 +77,23 @@ class GameBloc extends Bloc<GameEvent, GameState> {
   void _onTick(Tick event, Emitter<GameState> emit) {
     if (!state.isPlaying) return;
 
-    var newSnake = gameUseCase.moveSnake(state.snake, state.gridWidth, state.gridHeight, state.gameMode);
+    final isFoodEaten = state.snake.segments.first == state.food.position;
+    final grow = isFoodEaten && !state.food.isSpecial; // Grow only for regular food
+    var newSnake = gameUseCase.moveSnake(
+      state.snake,
+      state.gridWidth,
+      state.gridHeight,
+      state.gameMode,
+      grow: grow,
+    );
     var newScore = state.score;
     var newFood = state.food;
     var newFoodCount = state.foodCount;
     var newSpecialFoodCount = state.specialFoodCount;
     var newLives = state.lives;
     var newRewards = state.activeRewards;
+
+    print('Tick: Snake length = ${newSnake.segments.length}, Food eaten = $isFoodEaten, Grow = $grow');
 
     if (gameUseCase.checkCollision(newSnake, state.gridWidth, state.gridHeight, state.gameMode)) {
       if (newLives > 1) {
@@ -97,8 +108,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       }
     }
 
-    if (newSnake.segments.first == state.food.position) {
-      newSnake = state.snake; // Don't remove tail
+    if (isFoodEaten) {
       newScore += state.food.points;
       newFoodCount++;
       newSpecialFoodCount = state.food.isSpecial ? newSpecialFoodCount + 1 : newSpecialFoodCount;
@@ -124,7 +134,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
         }
         if (reward == RewardType.shrinkSize) {
           final newLength = (newSnake.segments.length * 0.9).floor();
-          newSnake = newSnake.copyWith(segments: newSnake.segments.sublist(0, newLength));
+          newSnake = newSnake.copyWith(segments: newSnake.segments.sublist(0, newLength.clamp(1, newSnake.segments.length)));
         }
         // Placeholder: Play milestone sound (milestone.wav)
       }

@@ -9,8 +9,7 @@ import 'package:snake_game/Presentation/Widgets/game_board.dart';
 import 'package:snake_game/Presentation/Widgets/reward_widget.dart';
 import 'package:snake_game/Presentation/Widgets/score_widget.dart';
 import 'package:snake_game/Presentation/Widgets/spin_counter_widget.dart';
-
-import '../Widgets/game_over_dialog.dart';
+import 'package:snake_game/Presentation/Widgets/game_over_dialog.dart';
 
 class GameScreen extends StatelessWidget {
   final GameMode gameMode;
@@ -40,44 +39,25 @@ class GameScreen extends StatelessWidget {
               );
             }
           },
-          child: GestureDetector(
-            onVerticalDragEnd: (details) {
-              if (details.primaryVelocity! < 0) {
-                context.read<GameBloc>().add(const ChangeDirection(Direction.up));
-              } else if (details.primaryVelocity! > 0) {
-                context.read<GameBloc>().add(const ChangeDirection(Direction.down));
-              }
-            },
-            onHorizontalDragEnd: (details) {
-              if (details.primaryVelocity! < 0) {
-                context.read<GameBloc>().add(const ChangeDirection(Direction.left));
-              } else if (details.primaryVelocity! > 0) {
-                context.read<GameBloc>().add(const ChangeDirection(Direction.right));
-              }
-            },
-            onTap: () {
-              context.read<GameBloc>().add(PerformSpin());
-            },
-            child: Column(
-              children: [
-                SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        ScoreWidget(),
-                        SpinCounterWidget(),
-                      ],
-                    ),
+          child: Column(
+            children: [
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      ScoreWidget(),
+                      SpinCounterWidget(),
+                    ],
                   ),
                 ),
-                RewardWidget(),
-                Expanded(
-                  child: GameBoard(cellSize: cellSize),
-                ),
-              ],
-            ),
+              ),
+              RewardWidget(),
+              Expanded(
+                child: GameBoard(cellSize: cellSize),
+              ),
+            ],
           ),
         ),
       ),
