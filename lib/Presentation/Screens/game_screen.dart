@@ -4,11 +4,13 @@ import 'package:snake_game/Core/enums.dart';
 import 'package:snake_game/Data/Repositories/high_score_repository.dart';
 import 'package:snake_game/Domain/Usecases/game_use_case.dart';
 import 'package:snake_game/Presentation/Blocs/Game/game_bloc.dart';
+import 'package:snake_game/Presentation/Blocs/Settings/settings_bloc.dart';
 import 'package:snake_game/Presentation/Widgets/food_widget.dart';
 import 'package:snake_game/Presentation/Widgets/game_board.dart';
 import 'package:snake_game/Presentation/Widgets/reward_widget.dart';
 import 'package:snake_game/Presentation/Widgets/score_widget.dart';
 import 'package:snake_game/Presentation/Widgets/spin_counter_widget.dart';
+import 'package:snake_game/Presentation/Widgets/regrow_countdown_widget.dart';
 import 'package:snake_game/Presentation/Screens/game_over_screen.dart';
 
 class GameScreen extends StatelessWidget {
@@ -23,17 +25,24 @@ class GameScreen extends StatelessWidget {
     final gridWidth = (size.width / cellSize).floor();
     final gridHeight = (size.height / cellSize).floor() - 5;
 
-    return BlocProvider(
-      create: (context) => GameBloc(
-        GameUseCase(),
-        HighScoreRepository(),
-      )..add(StartGame(gameMode, gridWidth, gridHeight)),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => GameBloc(
+            GameUseCase(),
+            HighScoreRepository(),
+          )..add(StartGame(gameMode, gridWidth, gridHeight)),
+        ),
+        BlocProvider(
+          create: (context) => SettingsBloc(),
+        ),
+      ],
       child: Scaffold(
         body: BlocConsumer<GameBloc, GameState>(
           listener: (context, state) async {
             if (!state.isPlaying) {
               print('Game over detected in GameScreen, navigating to GameOverScreen with score: ${state.score}');
-              await Future.delayed(const Duration(milliseconds: 100));
+              await Future.delayed(const Duration(milliseconds: 200));
               Navigator.of(context, rootNavigator: true).pushReplacement(
                 MaterialPageRoute(builder: (context) => GameOverScreen(score: state.score)),
               );
@@ -55,6 +64,7 @@ class GameScreen extends StatelessWidget {
                   ),
                 ),
                 RewardWidget(),
+                RegrowCountdownWidget(),
                 Expanded(
                   child: GameBoard(cellSize: cellSize),
                 ),

@@ -54,7 +54,7 @@ class GameUseCase {
 
     if (_isGameOver(newSegments, state.gameMode, state.gridWidth, state.gridHeight)) {
       final newLives = state.lives - 1;
-      final newScore = (state.score - 50).clamp(0, state.score); // Apply score penalty, minimum 0
+      final newScore = (state.score - 50).clamp(0, state.score); // Apply score penalty
       if (newLives <= 0) {
         return state.copyWith(
           isPlaying: false,
@@ -63,17 +63,17 @@ class GameUseCase {
         );
       }
       final newSnake = Snake(
-        segments: [state.snake.segments.first],
-        direction: state.snake.direction,
-        spinPositions: const [], // Reset spin positions
+        segments: [Position(x: 5, y: 5)], // Reset to initial position
+        direction: Direction.right, // Reset to initial direction
+        spinPositions: const [],
       );
       return state.copyWith(
         snake: newSnake,
         lives: newLives,
         score: newScore,
         spinCount: 0,
-        originalLength: null, // Prevent regrowth
-        spinDistanceTraveled: 0, // Prevent regrowth
+        originalLength: null,
+        spinDistanceTraveled: 0,
       );
     }
 
@@ -98,7 +98,7 @@ class GameUseCase {
     final newSpinPositions = [...state.snake.spinPositions, newSegments.first];
 
     if (newLives <= 0) {
-      final newScore = (state.score - 50).clamp(0, state.score); // Apply score penalty, minimum 0
+      final newScore = (state.score - 50).clamp(0, state.score);
       return state.copyWith(
         snake: state.snake.copyWith(segments: newSegments, spinPositions: newSpinPositions),
         spinCount: newSpinCount,
@@ -120,11 +120,17 @@ class GameUseCase {
   }
 
   GameState regrowSnake(GameState state) {
-    if (state.originalLength == null) return state;
+    if (state.originalLength == null || state.snake.segments.length >= state.originalLength!) {
+      return state.copyWith(
+        snake: state.snake.copyWith(spinPositions: const []), // Clear spin positions
+        originalLength: null,
+        spinDistanceTraveled: 0,
+      );
+    }
 
     final newSegments = [...state.snake.segments, state.snake.segments.last];
     final newSpinPositions = state.snake.spinPositions.isNotEmpty
-        ? state.snake.spinPositions.sublist(1) // Remove oldest spin position
+        ? state.snake.spinPositions.sublist(1)
         : state.snake.spinPositions;
 
     return state.copyWith(

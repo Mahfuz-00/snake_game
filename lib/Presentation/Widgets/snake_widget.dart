@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:snake_game/Domain/Entities/position.dart';
 import 'package:snake_game/Domain/Entities/snake.dart';
 
 class SnakeWidget extends StatefulWidget {
@@ -12,61 +13,81 @@ class SnakeWidget extends StatefulWidget {
 }
 
 class _SnakeWidgetState extends State<SnakeWidget> with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _rotationAnimation;
+  late AnimationController _controller;
+  late List<Offset> _currentPositions;
+  late List<Offset> _targetPositions;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 500),
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 100), // Match GameBloc tick rate
       vsync: this,
-    );
-    _rotationAnimation = Tween<double>(begin: 0, end: 1).animate(_animationController);
+    )..repeat();
+    _currentPositions = widget.snake.segments.map((pos) => Offset(pos.x * widget.cellSize, pos.y * widget.cellSize)).toList();
+    _targetPositions = _currentPositions;
   }
 
   @override
   void didUpdateWidget(SnakeWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.snake.spinPositions.length < widget.snake.spinPositions.length) {
-      _animationController.forward(from: 0).then((_) => _animationController.reset());
+    if (oldWidget.snake.segments != widget.snake.segments) {
+      _currentPositions = _targetPositions;
+      _targetPositions = widget.snake.segments.map((pos) => Offset(pos.x * widget.cellSize, pos.y * widget.cellSize)).toList();
+      _controller.reset();
+      _controller.forward();
     }
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.snake.segments.isEmpty) {
-      return const SizedBox.shrink(); // Handle empty snake
-    }
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final List<Offset> interpolatedPositions = List.generate(
+          widget.snake.segments.length,
+              (index) {
+            final start = _currentPositions[index];
+            final end = _targetPositions[index];
+            final t = _controller.value;
+            return Offset(
+              start.dx + (end.dx - start.dx) * t,
+              start.dy + (end.dy - start.dy) * t,
+            );
+          },
+        );
 
-    return Stack(
-      children: [
-        for (var i = 0; i < widget.snake.segments.length; i++)
-          Positioned(
-            left: widget.snake.segments[i].x * widget.cellSize,
-            top: widget.snake.segments[i].y * widget.cellSize,
-            child: i == 0 && widget.snake.spinPositions.contains(widget.snake.segments[i])
-                ? RotationTransition(
-              turns: _rotationAnimation,
-              child: Container(
-                width: widget.cellSize,
-                height: widget.cellSize,
-                color: Colors.green,
-              ),
-            )
-                : Container(
-              width: widget.cellSize,
-              height: widget.cellSize,
-              color: i == 0 ? Colors.green : Colors.lightGreen,
-            ),
+        return Stack(
+          children: List.generate(
+            widget.snake.segments.length,
+                (index) {
+              final isHead = index == 0;
+              final isSpinning = widget.snake.spinPositions.contains(widget.snake.segments[index]);
+              return Positioned(
+                left: interpolatedPositions[index].dx,
+                top: interpolatedPositions[index].dy,
+                child: Transform.rotate(
+                  angle: isSpinning ? _controller.value * 2 * 3.1416 : 0,
+                  child: Container(
+                    width: widget.cellSize,
+                    height: widget.cellSize,
+                    decoration: BoxDecoration(
+                      color: isHead ? Colors.green : Colors.lightGreen,
+                      border: Border.all(color: Colors.black),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
-      ],
+        );
+      },
     );
   }
 }

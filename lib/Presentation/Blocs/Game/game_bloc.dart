@@ -48,7 +48,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     final initialState = gameUseCase.initializeGame(event.gameMode, event.gridWidth, event.gridHeight);
     emit(initialState);
 
-    _gameTimer = Timer.periodic(Duration(milliseconds: event.gameMode == GameMode.classic ? 500 : 300), (timer) {
+    _gameTimer = Timer.periodic(Duration(milliseconds: event.gameMode == GameMode.classic ? 100 : 80), (timer) {
       add(Tick());
     });
 
@@ -62,7 +62,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     if (!state.isPlaying) return;
 
     var newState = gameUseCase.moveSnake(state);
-    print('Tick: Snake length = ${newState.snake.segments.length}, Spin count = ${newState.spinCount}, Lives = ${newState.lives}, Score = ${newState.score}');
+    print('Tick: Snake length = ${newState.snake.segments.length}, Spin count = ${newState.spinCount}, Lives = ${newState.lives}, Score = ${newState.score}, Original length = ${newState.originalLength}, Distance traveled = ${newState.spinDistanceTraveled}');
 
     if (!newState.isPlaying) {
       await _gameOver(emit);
@@ -76,11 +76,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       );
       if (newState.spinDistanceTraveled >= newState.snake.segments.length && newState.originalLength != null) {
         newState = gameUseCase.regrowSnake(newState);
-        print('Regrowing snake to original length: ${newState.originalLength}');
-        newState = newState.copyWith(
-          originalLength: null,
-          spinDistanceTraveled: 0,
-        );
+        print('Regrowing snake to length: ${newState.snake.segments.length}, Target: ${newState.originalLength}');
       }
     }
 
